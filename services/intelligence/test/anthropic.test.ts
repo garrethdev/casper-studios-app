@@ -62,8 +62,8 @@ describe('Anthropic request shape', () => {
     expect(init.signal).toBeInstanceOf(AbortSignal);
 
     expect(body.model).toBe('claude-haiku-5-5');
-    expect(body.temperature).toBe(0);
-    expect(body.max_tokens).toBe(900);
+    expect(body).not.toHaveProperty('temperature');
+    expect(body.max_tokens).toBe(4000);
     // The static prompt goes as one cached block, so repeat calls pay the cached input rate.
     expect(body.system).toEqual([{ type: 'text', text: VISION_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }]);
     expect(body.messages).toHaveLength(1);
@@ -110,7 +110,7 @@ describe('Anthropic request shape', () => {
     const m = mockFetch();
     await analyzerWith(m.fn).analyze(await input('lunch'));
     const { body, init } = m.calls[0]!;
-    expect(Object.keys(body).sort()).toEqual(['max_tokens', 'messages', 'model', 'system', 'temperature']);
+    expect(Object.keys(body).sort()).toEqual(['max_tokens', 'messages', 'model', 'system']);
     expect(body.tools).toBeUndefined();
     expect(body.tool_choice).toBeUndefined();
     expect(body.metadata).toBeUndefined();

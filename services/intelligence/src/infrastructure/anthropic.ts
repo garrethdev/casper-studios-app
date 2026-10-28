@@ -31,6 +31,8 @@ const RETRY_DELAY_MS = 800;
  * safe error; the upstream body is never echoed to the caller or the logs.
  * The system prompt is identical on every call, so it is marked for prompt
  * caching and its input tokens are billed at the cached rate after the first use.
+ * No sampling parameters are sent: current models reject temperature, top_p and top_k with a 400.
+ * max_tokens leaves room for the model's own thinking, which counts against it.
  */
 export async function callMessages(
   cfg: AnthropicConfig,
@@ -50,7 +52,6 @@ export async function callMessages(
       body: JSON.stringify({
         model: cfg.model ?? DEFAULT_MODEL,
         max_tokens: body.maxTokens,
-        temperature: 0,
         system: [{ type: 'text', text: body.system, cache_control: { type: 'ephemeral' } }],
         messages: [{ role: 'user', content: body.content }],
       }),
@@ -71,7 +72,10 @@ export async function callMessages(
   }
 
   if (!res.ok) {
-    log.warn('anthropic non-200', { status: res.status });
+    // A 4xx means our request was malformed, and Anthropic's reason describes its shape, never user content.
+    // Keep just that reason in the log so a bad parameter is findable; the caller still gets the generic message.
+    const reason = res.status >= 400 && res.status < 500 ? await upstreamReason(res) : undefined;
+    log.warn('anthropic non-200', { status: res.status, ...reason });
     throw new AppError(502, 'ai_upstream_error', UPSTREAM_MESSAGE);
   }
 
@@ -87,6 +91,18 @@ export async function callMessages(
     .filter((b) => b.type === 'text' && typeof b.text === 'string')
     .map((b) => b.text as string)
     .join('\n');
+}
+
+async function upstreamReason(res: Response): Promise<{ errorType?: string; errorMessage?: string }> {
+  try {
+    const j = (await res.json()) as { error?: { type?: unknown; message?: unknown } };
+    return {
+      errorType: typeof j.error?.type === 'string' ? j.error.type.slice(0, 60) : undefined,
+      errorMessage: typeof j.error?.message === 'string' ? j.error.message.slice(0, 200) : undefined,
+    };
+  } catch {
+    return {};
+  }
 }
 
 /** Pulls one JSON object out of a reply, tolerating a code fence or a sentence around it. */
@@ -130,7 +146,7 @@ export class AnthropicVisionAnalyzer implements MealAnalyzer {
       },
     ];
 
-    const reply = await callMessages(this.cfg, { system: VISION_SYSTEM_PROMPT, maxTokens: 900, content });
+    const reply = await callMessages(this.cfg, { system: VISION_SYSTEM_PROMPT, maxTokens: 4000, content });
     const parsed = RawDetectionSchema.safeParse(extractJsonObject(reply));
     if (!parsed.success) throw new AppError(422, 'analysis_failed', FAILED_MESSAGE);
     return parsed.data;

@@ -19,7 +19,7 @@ export class AnthropicFeedbackRephraser implements FeedbackRephraser {
   async rephrase(input: RephraseInput): Promise<RephraseOutput> {
     const reply = await callMessages(this.cfg, {
       system: REPHRASE_SYSTEM_PROMPT,
-      maxTokens: 500,
+      maxTokens: 2000,
       content: [{ type: 'text', text: JSON.stringify({ headline: input.headline, tips: input.tips, snippets: input.snippets }) }],
     });
     return Reply.parse(extractJsonObject(reply));

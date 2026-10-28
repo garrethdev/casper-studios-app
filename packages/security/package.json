@@ -1,0 +1,8 @@
+{
+  "name": "@leanplate/security",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "hono": "^4.6.0", "jose": "^5.9.0" }
+}

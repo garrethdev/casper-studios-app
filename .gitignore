@@ -1,0 +1,14 @@
+node_modules
+.env
+.env.*
+!.env.example
+.data
+dist
+.next
+.vercel
+*.log
+.DS_Store
+coverage
+api/index.mjs
+*.tsbuildinfo
+next-env.d.ts

@@ -1,0 +1,31 @@
+{
+  "name": "leanplate",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n identity,meals,ai,web -c blue,green,magenta,cyan \"npm run dev -w @leanplate/identity\" \"npm run dev -w @leanplate/meals\" \"npm run dev -w @leanplate/intelligence\" \"npm run dev -w @leanplate/web\"",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "audit": "npm audit --omit=dev"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "concurrently": "^10.0.6",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "sharp": "^0.35.5"
+  }
+}

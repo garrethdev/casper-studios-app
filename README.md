@@ -24,7 +24,7 @@ I built it because I have tried most of the big tracking apps and they all make 
 
 ## What is incomplete
 
-- Photo analysis has only been exercised with unit tests against a mocked model and the real pipeline in text mode. It needs an `ANTHROPIC_API_KEY` to run for real.
+- Photo analysis has been run live on the deployed app with one real food photo (it read the foods, grounded them to the knowledge base and flagged uncertain items for review, but it also invented one food that was not on the plate), and otherwise only through unit tests against a mocked model. It is not a benchmark. Locally it needs an `ANTHROPIC_API_KEY`.
 - There is no password reset or email verification (no email provider is wired in).
 - The weekly chart shows calories only. Weight tracking over time is not built.
 - Analysis is synchronous: the browser waits while the model works. The roadmap in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) describes the job-based version.

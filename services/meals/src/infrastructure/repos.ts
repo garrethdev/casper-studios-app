@@ -3,6 +3,8 @@ import type { Db } from '@leanplate/platform';
 import type { MealRepo, ProfileRepo, UsageRepo } from '../application/ports';
 
 const iso = (v: unknown) => new Date(v as string | Date).toISOString();
+// JSON columns are written as text and cast in SQL (`$n::text::jsonb`). A bare `::jsonb` makes
+// postgres.js run its own JSON serializer on the already-encoded string, which double-encodes it.
 const json = (v: unknown) => JSON.stringify(v);
 
 export class PgProfileRepo implements ProfileRepo {
@@ -15,7 +17,7 @@ export class PgProfileRepo implements ProfileRepo {
 
   async upsert(userId: string, input: Omit<ProfileInput, 'acceptedDisclaimer'>, now: Date): Promise<Profile> {
     await this.db.query(
-      `insert into meals.profiles (user_id, data, updated_at) values ($1, $2::jsonb, $3)
+      `insert into meals.profiles (user_id, data, updated_at) values ($1, $2::text::jsonb, $3)
        on conflict (user_id) do update set data = excluded.data, updated_at = excluded.updated_at`,
       [userId, json(input), now.toISOString()],
     );
@@ -44,7 +46,7 @@ export class PgMealRepo implements MealRepo {
   async insert(userId: string, m: MealRecord, key: string) {
     const rows = await this.db.query(
       `insert into meals.meals (id, user_id, idempotency_key, eaten_at, meal_type, items, totals, verdict, feedback, note)
-       values ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8::jsonb, $9::jsonb, $10)
+       values ($1, $2, $3, $4, $5, $6::text::jsonb, $7::text::jsonb, $8::text::jsonb, $9::text::jsonb, $10)
        on conflict (user_id, idempotency_key) do nothing returning id`,
       [m.id, userId, key, m.eatenAt, m.mealType, json(m.items), json(m.totals), json(m.verdict), m.feedback ? json(m.feedback) : null, m.note],
     );

@@ -7,7 +7,7 @@ I built it because I have tried most of the big tracking apps and they all make 
 **Submission for the Casper Studios take-home.** TypeScript end to end.
 
 - Deployed product: https://leanplate-web.vercel.app
-- Source: this repository
+- Source: https://github.com/garrethdev/casper-studios-app
 
 ## What works
 
